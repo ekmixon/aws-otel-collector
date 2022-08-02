@@ -58,17 +58,22 @@ if __name__ == "__main__":
             Attachments=[
                 {
                     'Key': 'SourceUrl',
-                    'Values': ['https://s3.amazonaws.com/' + s3_bucket],
+                    'Values': [f'https://s3.amazonaws.com/{s3_bucket}'],
                 }
             ],
             Name=pkg_name,
             VersionName=rel_ver,
-            DocumentType='Package'
+            DocumentType='Package',
         )
-        print("%s %s is created in %s." % (pkg_name, rel_ver, region))
+
+        print(f"{pkg_name} {rel_ver} is created in {region}.")
     else:
         response = client.list_document_versions(Name=pkg_name)
-        if len([ver for ver in response['DocumentVersions'] if ver['VersionName'] == rel_ver]) == 0:
+        if not [
+            ver
+            for ver in response['DocumentVersions']
+            if ver['VersionName'] == rel_ver
+        ]:
             with open("build/packages/ssm/manifest.json","r") as f:
                 manifest = f.read()
             response = client.update_document(
@@ -76,20 +81,21 @@ if __name__ == "__main__":
                 Attachments=[
                     {
                         'Key': 'SourceUrl',
-                        'Values': ['https://s3.amazonaws.com/' + s3_bucket],
+                        'Values': [f'https://s3.amazonaws.com/{s3_bucket}'],
                     }
                 ],
                 Name=pkg_name,
                 VersionName=rel_ver,
-                DocumentVersion='$LATEST'
+                DocumentVersion='$LATEST',
             )
-            print("%s is updated to %s in %s." % (pkg_name, rel_ver, region))
+
+            print(f"{pkg_name} is updated to {rel_ver} in {region}.")
             if not args.no_default:
                 last_version = response['DocumentDescription']['LatestVersion']
                 response = client.update_document_default_version(
                     Name=pkg_name,
                     DocumentVersion=last_version
                 )
-                print("%s is set default to %s in %s." % (pkg_name, rel_ver, region))
+                print(f"{pkg_name} is set default to {rel_ver} in {region}.")
         else:
-            print("%s %s exists in %s." % (pkg_name, rel_ver, region))
+            print(f"{pkg_name} {rel_ver} exists in {region}.")

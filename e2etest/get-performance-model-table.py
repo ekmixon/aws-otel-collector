@@ -43,12 +43,19 @@ def flatten_performance_models(models):
 
     for data_mode, data_rates in performance_models.items():
         for data_rate, models in data_rates.items():
-            model = {}
-            model["data_mode"] = data_mode
-            model["data_rate"] = data_rate
-            # sort by name and type
-            model["models"] = sorted(
-                models, key=lambda x: (x["receivers"], x["testcase"], x["dataType"]))
+            model = {
+                "data_mode": data_mode,
+                "data_rate": data_rate,
+                "models": sorted(
+                    models,
+                    key=lambda x: (
+                        x["receivers"],
+                        x["testcase"],
+                        x["dataType"],
+                    ),
+                ),
+            }
+
             models_list.append(model)
 
     # sort by data mode and rate

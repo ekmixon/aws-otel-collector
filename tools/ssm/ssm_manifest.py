@@ -25,14 +25,14 @@ def buildssmpkg(pkg_version, ssm_base, ssm_files, ssm_installers, output_dir):
         os.mkdir(output_dir)
     file_hash = {}
     for ssm_file in ssm_files.keys():
-        zip_file = output_dir + "/" + ssm_file + ".zip"
-        ssm_file_path = ssm_base + "/" + ssm_file
+        zip_file = f"{output_dir}/{ssm_file}.zip"
+        ssm_file_path = f"{ssm_base}/{ssm_file}"
         if not os.path.isfile(zip_file):
             shutil.copy(ssm_files[ssm_file], ssm_file_path)
             zf = zipfile.ZipFile(zip_file, mode="w")
             file_list = os.listdir(ssm_file_path)
             for file in file_list:
-                zf.write(ssm_file_path + "/" + file, file)
+                zf.write(f"{ssm_file_path}/{file}", file)
             zf.close()
         sha256 = hashlib.sha256()
         with open(zip_file, "rb") as f:
@@ -41,10 +41,11 @@ def buildssmpkg(pkg_version, ssm_base, ssm_files, ssm_installers, output_dir):
             file_hash[ssm_file] = sha256.hexdigest()
     ssm_sha256_list = {}
     for ssm_file in ssm_files.keys():
-        ssm_file_zip = ssm_base + "/" + ssm_file + ".zip"
-        ssm_sha256_list[ssm_file + ".zip"] = {
+        ssm_file_zip = f"{ssm_base}/{ssm_file}.zip"
+        ssm_sha256_list[f"{ssm_file}.zip"] = {
             "checksums": {"sha256": file_hash[ssm_file]}
         }
+
     manifest = {
         "schemaVersion": "2.0",
         "version": pkg_version,
@@ -52,38 +53,29 @@ def buildssmpkg(pkg_version, ssm_base, ssm_files, ssm_installers, output_dir):
         "files": ssm_sha256_list,
     }
     print(json.dumps(manifest))
-    with open(output + "/manifest.json", "w") as f:
+    with open(f"{output}/manifest.json", "w") as f:
         json.dump(manifest, f)
     return manifest
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: %s version [base] [build] [output]" % sys.argv[0])
+        print(f"Usage: {sys.argv[0]} version [base] [build] [output]")
         sys.exit()
     aoc_pkg_ver = sys.argv[1]
     if aoc_pkg_ver.startswith("v"):
         aoc_pkg_ver = aoc_pkg_ver[1:]
-    if len(sys.argv) < 3:
-        base = "tools/ssm"
-    else:
-        base = sys.argv[2]
-    if len(sys.argv) < 4:
-        build = "build"
-    else:
-        build = sys.argv[3]
-    if len(sys.argv) < 5:
-        output = "build/packages/ssm"
-    else:
-        output = sys.argv[4]
-
+    base = "tools/ssm" if len(sys.argv) < 3 else sys.argv[2]
+    build = "build" if len(sys.argv) < 4 else sys.argv[3]
+    output = "build/packages/ssm" if len(sys.argv) < 5 else sys.argv[4]
     aoc_files = {
-        "linux-amd64-rpm": build + "/packages/linux/amd64/aws-otel-collector.rpm",
-        "linux-arm64-rpm": build + "/packages/linux/arm64/aws-otel-collector.rpm",
-        "linux-amd64-deb": build + "/packages/debian/amd64/aws-otel-collector.deb",
-        "linux-arm64-deb": build + "/packages/debian/arm64/aws-otel-collector.deb",
-        "windows-amd64-msi": build + "/packages/windows/amd64/aws-otel-collector.msi",
+        "linux-amd64-rpm": f"{build}/packages/linux/amd64/aws-otel-collector.rpm",
+        "linux-arm64-rpm": f"{build}/packages/linux/arm64/aws-otel-collector.rpm",
+        "linux-amd64-deb": f"{build}/packages/debian/amd64/aws-otel-collector.deb",
+        "linux-arm64-deb": f"{build}/packages/debian/arm64/aws-otel-collector.deb",
+        "windows-amd64-msi": f"{build}/packages/windows/amd64/aws-otel-collector.msi",
     }
+
     aoc_installers = {
         "windows": {"_any": {"x86_64": {"file": "windows-amd64-msi.zip"}}},
         "amazon": {
